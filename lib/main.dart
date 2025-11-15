@@ -47,14 +47,19 @@ class HomeScreenState extends State<HomeScreen> {
         password: _passwordController.text.trim(),
       );
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => WelcomeScreen(
-              userEmail: _auth.currentUser!.email!,
+        final userEmail = _auth.currentUser?.email;
+        if (userEmail != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WelcomeScreen(
+                userEmail: userEmail,
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          setState(() => _errorMessage = 'Could not retrieve user email.');
+        }
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
@@ -71,20 +76,32 @@ class HomeScreenState extends State<HomeScreen> {
         password: _passwordController.text.trim(),
       );
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => WelcomeScreen(
-              userEmail: _auth.currentUser!.email!,
+        final userEmail = _auth.currentUser?.email;
+        if (userEmail != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WelcomeScreen(
+                userEmail: userEmail,
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          setState(() => _errorMessage = 'Could not retrieve user email.');
+        }
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = e.message ?? 'An error occurred';
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
