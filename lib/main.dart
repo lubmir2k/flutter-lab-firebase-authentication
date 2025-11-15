@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'screens/signup_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/list_users_screen.dart';
+import 'screens/chat_screen.dart';
+import 'screens/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,208 +22,91 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Firebase Authentication',
+      title: 'Buddy Chat',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFA1EDA4)),
+        useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: const AuthWrapper(),
+      routes: {
+        '/signup': (context) => const SignUpScreen(),
+        '/login': (context) => const LoginScreen(),
+      },
     );
   }
 }
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  HomeScreenState createState() => HomeScreenState();
-}
-
-class HomeScreenState extends State<HomeScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  String _errorMessage = '';
-  bool _isLoading = false;
-
-  Future<void> _signIn() async {
-    setState(() {
-      _errorMessage = '';
-      _isLoading = true;
-    });
-    try {
-      await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-      if (mounted) {
-        final userEmail = _auth.currentUser?.email;
-        if (userEmail != null) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => WelcomeScreen(
-                userEmail: userEmail,
-              ),
-            ),
-          );
-        } else {
-          setState(() {
-            _errorMessage = 'Could not retrieve user email.';
-            _isLoading = false;
-          });
-        }
-      }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message ?? 'An error occurred';
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _register() async {
-    setState(() {
-      _errorMessage = '';
-      _isLoading = true;
-    });
-    try {
-      await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-      if (mounted) {
-        final userEmail = _auth.currentUser?.email;
-        if (userEmail != null) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => WelcomeScreen(
-                userEmail: userEmail,
-              ),
-            ),
-          );
-        } else {
-          setState(() {
-            _errorMessage = 'Could not retrieve user email.';
-            _isLoading = false;
-          });
-        }
-      }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message ?? 'An error occurred';
-        _isLoading = false;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Firebase Authentication'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 16),
-            if (_errorMessage.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: Text(
-                  _errorMessage,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              ),
-            if (_isLoading)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 16.0),
-                child: CircularProgressIndicator(),
-              ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _signIn,
-                  child: const Text('Sign In'),
-                ),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _register,
-                  child: const Text('Register'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // Show loading while checking auth state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // User is logged in
+        if (snapshot.hasData && snapshot.data != null) {
+          return const MainTabNavigator();
+        }
+
+        // User is not logged in
+        return const SignUpScreen();
+      },
     );
   }
 }
 
-class WelcomeScreen extends StatelessWidget {
-  final String userEmail;
+class MainTabNavigator extends StatefulWidget {
+  const MainTabNavigator({super.key});
 
-  const WelcomeScreen({super.key, required this.userEmail});
+  @override
+  State<MainTabNavigator> createState() => _MainTabNavigatorState();
+}
+
+class _MainTabNavigatorState extends State<MainTabNavigator> {
+  int _currentIndex = 0;
+
+  final List<Widget> _screens = const [
+    ListUsersScreen(),
+    SettingsScreen(),
+  ];
+
+  final List<String> _titles = const [
+    'Buddies',
+    'Settings',
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Welcome'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Welcome, $userEmail!',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                await FirebaseAuth.instance.signOut();
-                if (context.mounted) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const HomeScreen(),
-                    ),
-                  );
-                }
-              },
-              child: const Text('Sign Out'),
-            ),
-          ],
-        ),
+      body: _screens[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        backgroundColor: Colors.black,
+        selectedItemColor: const Color(0xFFA1EDA4),
+        unselectedItemColor: Colors.white70,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Buddies',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
       ),
     );
   }
