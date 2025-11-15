@@ -68,13 +68,11 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAGqcX0G_jVhMfrdnF4cdeTFcFNNpGTBk4',
-    appId: '1:598636394876:web:859c10b9a5a43850b60cf9',
+    apiKey: 'AIzaSyC9CfJ4Ss_oDjws9PCfoUSA-LcWPwtmKgo',
+    appId: '1:598636394876:ios:ea21cec1bd045ef1b60cf9',
     messagingSenderId: '598636394876',
     projectId: 'my-awesome-project-b4aa8',
-    authDomain: 'my-awesome-project-b4aa8.firebaseapp.com',
     storageBucket: 'my-awesome-project-b4aa8.firebasestorage.app',
-    measurementId: 'G-E0D2N93418',
     iosBundleId: 'com.example.flutterGoogleAnalyticsLab',
   );
 
