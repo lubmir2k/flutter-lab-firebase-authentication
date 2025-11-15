@@ -38,10 +38,14 @@ class HomeScreenState extends State<HomeScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String _errorMessage = '';
+  bool _isLoading = false;
 
   Future<void> _signIn() async {
+    setState(() {
+      _errorMessage = '';
+      _isLoading = true;
+    });
     try {
-      setState(() => _errorMessage = '');
       await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -58,19 +62,26 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           );
         } else {
-          setState(() => _errorMessage = 'Could not retrieve user email.');
+          setState(() {
+            _errorMessage = 'Could not retrieve user email.';
+            _isLoading = false;
+          });
         }
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = e.message ?? 'An error occurred';
+        _isLoading = false;
       });
     }
   }
 
   Future<void> _register() async {
+    setState(() {
+      _errorMessage = '';
+      _isLoading = true;
+    });
     try {
-      setState(() => _errorMessage = '');
       await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -87,12 +98,16 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           );
         } else {
-          setState(() => _errorMessage = 'Could not retrieve user email.');
+          setState(() {
+            _errorMessage = 'Could not retrieve user email.';
+            _isLoading = false;
+          });
         }
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = e.message ?? 'An error occurred';
+        _isLoading = false;
       });
     }
   }
@@ -142,15 +157,20 @@ class HomeScreenState extends State<HomeScreen> {
                   style: const TextStyle(color: Colors.red),
                 ),
               ),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 16.0),
+                child: CircularProgressIndicator(),
+              ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
-                  onPressed: _signIn,
+                  onPressed: _isLoading ? null : _signIn,
                   child: const Text('Sign In'),
                 ),
                 ElevatedButton(
-                  onPressed: _register,
+                  onPressed: _isLoading ? null : _register,
                   child: const Text('Register'),
                 ),
               ],
