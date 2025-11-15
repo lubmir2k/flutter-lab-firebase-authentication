@@ -132,9 +132,49 @@ Firebase Auth on macOS requires Apple Developer code signing to access the syste
 
 1. **Never commit** Firebase configuration files
 2. **Use environment variables** for CI/CD
-3. **Rotate API keys** if accidentally exposed
+3. **Rotate API keys** if accidentally exposed (see below)
 4. **Enable App Check** in production
 5. **Use Firebase Security Rules** to protect data
+
+## Rotating API Keys (If Exposed)
+
+If you accidentally commit Firebase credentials to git, follow these steps immediately:
+
+### Option 1: Delete and Regenerate (Recommended)
+
+1. **Delete the exposed API key:**
+   - Go to [Google Cloud Console → API & Services → Credentials](https://console.cloud.google.com/apis/credentials)
+   - Find and delete the exposed API key
+
+2. **Regenerate Firebase configuration:**
+   ```bash
+   # This will create new API keys automatically
+   flutterfire configure
+   ```
+   - Select your existing Firebase project
+   - Choose the same platforms as before
+   - New configuration files will be generated with fresh API keys
+
+3. **Verify new keys are working:**
+   ```bash
+   flutter run -d chrome
+   ```
+
+4. **Clean up git history:**
+   - If credentials were pushed to GitHub, consider the repository compromised
+   - You may need to force-push a cleaned history or create a new repository
+
+### Option 2: Restrict Existing Keys
+
+If you want to keep the existing keys but restrict their usage:
+
+1. Go to [Google Cloud Console → API & Services → Credentials](https://console.cloud.google.com/apis/credentials)
+2. Click on your API key
+3. Add **Application restrictions**:
+   - For Web: Add HTTP referrers (your domains)
+   - For iOS: Add iOS bundle IDs
+   - For Android: Add Android package names
+4. Add **API restrictions** to limit which Google APIs the key can access
 
 ## Dependencies
 
