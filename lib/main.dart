@@ -78,11 +78,6 @@ class _MainTabNavigatorState extends State<MainTabNavigator> {
     SettingsScreen(),
   ];
 
-  final List<String> _titles = const [
-    'Buddies',
-    'Settings',
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

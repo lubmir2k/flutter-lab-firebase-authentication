@@ -48,7 +48,7 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     } catch (e) {
-      print('Error loading avatar: $e');
+      debugPrint('Error loading avatar: $e');
     }
   }
 
@@ -62,8 +62,12 @@ class _ChatScreenState extends State<ChatScreen> {
       final messageText = _messageController.text.trim();
       _messageController.clear();
 
-      await _firestore.collection('chats').add({
-        '_id': DateTime.now().millisecondsSinceEpoch.toString(),
+      // Get a reference to a new document with an auto-generated ID
+      final newChatDoc = _firestore.collection('chats').doc();
+
+      // Use this reference to set the data, including the ID itself
+      await newChatDoc.set({
+        '_id': newChatDoc.id, // Use Firestore's unique ID
         'createdAt': Timestamp.now(),
         'text': messageText,
         'user': {
@@ -84,10 +88,12 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       });
     } catch (e) {
-      print('Error sending message: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send message: $e')),
-      );
+      debugPrint('Error sending message: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send message: $e')),
+        );
+      }
     }
   }
 
@@ -150,7 +156,42 @@ class _ChatScreenState extends State<ChatScreen> {
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(
-                    child: Text('Error: ${snapshot.error}'),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error, color: Colors.red, size: 48),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error loading messages',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${snapshot.error}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Loading messages...'),
+                      ],
+                    ),
                   );
                 }
 

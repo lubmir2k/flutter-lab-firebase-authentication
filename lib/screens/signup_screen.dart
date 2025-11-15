@@ -36,8 +36,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
         password: _passwordController.text.trim(),
       );
       // Navigation handled by StreamBuilder in main.dart
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     } on FirebaseAuthException catch (error) {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
 
       final errorMessage = error.message ?? 'An error occurred';
       if (errorMessage.contains('email-already-in-use')) {
