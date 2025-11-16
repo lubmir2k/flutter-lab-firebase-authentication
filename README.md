@@ -78,19 +78,30 @@ flutter pub get
 
 5. **Create composite indexes** (CRITICAL for chat queries):
 
+   The compound OR query requires ALL three indexes with Ascending sort order:
+
    **Index 1:**
    - Collection ID: `chats`
    - Fields:
      - `user._id` - Ascending
-     - `createdAt` - Descending
+     - `receiver` - Ascending
+     - `createdAt` - Ascending
 
    **Index 2:**
    - Collection ID: `chats`
    - Fields:
+     - `user._id` - Ascending
+     - `createdAt` - Ascending
+
+   **Index 3:**
+   - Collection ID: `chats`
+   - Fields:
      - `receiver` - Ascending
-     - `createdAt` - Descending
+     - `createdAt` - Ascending
 
    Navigate to: **Firestore Database** → **Indexes** → **Create Index**
+
+   **Important:** All three indexes are required. Create them all before testing the chat feature.
 
    Note: Indexes take 5-10 minutes to build. The app will error until they're ready.
 
@@ -188,9 +199,11 @@ macos/Runner/
 
 ### 2. Set Up Avatar
 1. Click the **Settings** tab
-2. Enter an avatar URL (e.g., `https://i.pravatar.cc/150?img=1`)
+2. Enter an avatar URL:
+   - For web: `https://api.dicebear.com/7.x/avataaars/svg?seed=yourname` (CORS-friendly)
+   - For mobile: `https://i.pravatar.cc/150?img=1` works fine
 3. Click **Save Changes**
-4. Avatar preview will update
+4. Avatar preview will update (on web, CORS may prevent some URLs from displaying)
 
 ### 3. Create Second User (for testing chat)
 1. Click **Sign Out** in Settings
@@ -250,6 +263,14 @@ Firebase Auth on macOS requires Apple Developer code signing to access the syste
 
 ### Firestore Index Build Time
 After creating composite indexes, allow 5-10 minutes for them to build. The chat screen will show errors until indexes are ready.
+
+### Avatar Images Not Loading (Web Only)
+Due to CORS (Cross-Origin Resource Sharing) restrictions, some avatar image URLs may not display in web browsers. The URLs are saved correctly in Firestore, but browsers block loading them.
+
+**Solutions:**
+- Use CORS-friendly services like Dicebear: `https://api.dicebear.com/7.x/avataaars/svg?seed=yourname`
+- Upload images to Firebase Storage
+- Images from `i.pravatar.cc` work fine on native platforms (iOS/Android) but are blocked on web
 
 ## Security Best Practices
 

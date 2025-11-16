@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  final VoidCallback? onToggle;
+
+  const SignUpScreen({super.key, this.onToggle});
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -181,9 +183,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 children: [
                   const Text('Already have an account? '),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacementNamed(context, '/login');
-                    },
+                    onTap: widget.onToggle,
                     child: const Text(
                       'Log In',
                       style: TextStyle(

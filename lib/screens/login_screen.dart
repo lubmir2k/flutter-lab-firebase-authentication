@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final VoidCallback? onToggle;
+
+  const LoginScreen({super.key, this.onToggle});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -20,18 +22,24 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    debugPrint('LOGIN: Starting login attempt for ${_emailController.text.trim()}');
     setState(() => _isLoading = true);
 
     try {
-      await _auth.signInWithEmailAndPassword(
+      final userCredential = await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+      debugPrint('LOGIN: Success! User: ${userCredential.user?.email}');
+      debugPrint('LOGIN: Current auth state: ${_auth.currentUser?.email}');
+
       // Navigation handled by StreamBuilder in main.dart
       if (mounted) {
         setState(() => _isLoading = false);
+        debugPrint('LOGIN: Loading state cleared, waiting for StreamBuilder navigation...');
       }
     } on FirebaseAuthException catch (error) {
+      debugPrint('LOGIN: Firebase auth error: ${error.code} - ${error.message}');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -149,9 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const Text("Don't have an account? "),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacementNamed(context, '/signup');
-                    },
+                    onTap: widget.onToggle,
                     child: const Text(
                       'Sign Up',
                       style: TextStyle(

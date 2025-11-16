@@ -28,10 +28,6 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const AuthWrapper(),
-      routes: {
-        '/signup': (context) => const SignUpScreen(),
-        '/login': (context) => const LoginScreen(),
-      },
     );
   }
 }
@@ -41,11 +37,15 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('AUTHWRAPPER: Building AuthWrapper');
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
+        debugPrint('AUTHWRAPPER: StreamBuilder rebuild - connectionState: ${snapshot.connectionState}, hasData: ${snapshot.hasData}, user: ${snapshot.data?.email}');
+
         // Show loading while checking auth state
         if (snapshot.connectionState == ConnectionState.waiting) {
+          debugPrint('AUTHWRAPPER: Showing loading spinner (waiting for auth state)');
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
@@ -53,13 +53,41 @@ class AuthWrapper extends StatelessWidget {
 
         // User is logged in
         if (snapshot.hasData && snapshot.data != null) {
+          debugPrint('AUTHWRAPPER: User is logged in, showing MainTabNavigator for ${snapshot.data!.email}');
           return const MainTabNavigator();
         }
 
         // User is not logged in
-        return const SignUpScreen();
+        debugPrint('AUTHWRAPPER: No user logged in, showing AuthScreen');
+        return const AuthScreen();
       },
     );
+  }
+}
+
+class AuthScreen extends StatefulWidget {
+  const AuthScreen({super.key});
+
+  @override
+  State<AuthScreen> createState() => _AuthScreenState();
+}
+
+class _AuthScreenState extends State<AuthScreen> {
+  bool _showSignUp = true;
+
+  void _toggleView() {
+    debugPrint('AUTHSCREEN: Toggling view from ${_showSignUp ? "SignUp" : "Login"} to ${_showSignUp ? "Login" : "SignUp"}');
+    setState(() {
+      _showSignUp = !_showSignUp;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    debugPrint('AUTHSCREEN: Building ${_showSignUp ? "SignUpScreen" : "LoginScreen"}');
+    return _showSignUp
+        ? SignUpScreen(onToggle: _toggleView)
+        : LoginScreen(onToggle: _toggleView);
   }
 }
 
